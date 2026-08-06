@@ -1,0 +1,33 @@
+name: Mirror to GitLab
+
+on:
+  push:
+    branches:
+      - "**"
+    tags:
+      - "*"
+  delete:
+  workflow_dispatch:
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Git
+        env:
+          GITLAB_BOT_EMAIL: ${{ secrets.GITLAB_BOT_EMAIL }}
+        run: |
+          set -euo pipefail
+          git clone --mirror "https://github.com/${{ github.repository }}.git" repo.git
+          cd repo.git
+          git config user.name Xenon Sync
+          git config user.email ${GITLAB_BOT_EMAIL}
+      - name: Mirror repository to GitLab
+        env:
+          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
+        run: |
+          set -euo pipefail
+          cd repo.git
+          git remote set-url --push origin \
+            "https://oauth2:${GITLAB_TOKEN}@gitlab.com/DaBoiCJDevelopment/routerOS/main/wrtsrc"
+          git push --mirror
